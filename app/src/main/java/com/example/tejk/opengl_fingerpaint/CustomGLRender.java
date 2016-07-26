@@ -81,6 +81,10 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
         if (mMeshes != null) {
             for (Mesh mesh : mMeshes) {
+                if (mesh.getTop() - mesh.getBottom() < 30 || mesh.getRight() - mesh.getLeft() < 30) {
+                    mMeshes.poll();
+                    continue;
+                }
                 mesh.draw(m);
             }
         }
@@ -125,7 +129,7 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
 
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-        int id = mContext.getResources().getIdentifier("drawable/particle", null,
+        int id = mContext.getResources().getIdentifier("drawable/particle_solid", null,
                                                        mContext.getPackageName());
         // Temporary create a bitmap
         mTexture = BitmapFactory.decodeResource(mContext.getResources(), id);
@@ -184,7 +188,7 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
         MousePoint mousePoint = new MousePoint(x, y);
         ArrayList<MousePoint> out = new ArrayList<>();
         mMousePoints.add(mousePoint);
-        if (mMousePoints.size() == 4) {
+        if (mMousePoints.size() == 8) {
 //            for (int i = 0; i < 100; i++) {
 ////                interpolatedX = hermiteInterpolate(mMousePoints.get(0).getX(),
 ////                                                   mMousePoints.get(1).getX(),
@@ -224,12 +228,12 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
             @Override
             public void run() {
                 Mesh mesh = new Mesh(mContext, textureIDs[0]);
-                mesh.setLeft((x - 20));
-                mesh.setRight((x + 20));
-                mesh.setTop(((mScreenHeight - y) + 20));
-                mesh.setBottom(((mScreenHeight - y) - 20));
+                mesh.setLeft((x - 50));
+                mesh.setRight((x + 50));
+                mesh.setTop(((mScreenHeight - y) + 50));
+                mesh.setBottom(((mScreenHeight - y) - 50));
                 mMeshes.add(mesh);
-                if (mMeshes.size() > 100) {
+                if (mMeshes.size() > 300) {
                     mMeshes.poll();
                 }
             }

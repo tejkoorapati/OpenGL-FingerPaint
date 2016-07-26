@@ -13,6 +13,8 @@ import java.nio.IntBuffer;
 public class Mesh {
     Context mContext;
     // Geometric variables
+    private float width;
+    private float height;
     private float left;
     private float right;
     private float top;
@@ -33,7 +35,7 @@ public class Mesh {
         mTextureId = textureId;
         setupTriangle();
         setupImage();
-        lifeCounter = 10;
+        lifeCounter = 1;
     }
 
     private void setupTriangle() {
@@ -47,7 +49,7 @@ public class Mesh {
         indices = new int[]{0, 1, 2, 0, 2, 3}; // loop in the android official tutorial opengles why different order.
         color = new float[]
                 {1f,
-                        0f,
+                        1f,
                         0f,
                         1f,
                 };
@@ -88,7 +90,7 @@ public class Mesh {
 
     public void draw(float m[]) {
         calcPoints();
-        setColorBuffer(color[0], color[0], color[2], 0.2f);
+        setColorBuffer(1 - (1 - (1 / lifeCounter)), color[1], color[2], 0.2f);
 //        Log.d("<^>",String.valueOf(color[3]));
         int mPositionHandle = GLES20.glGetAttribLocation(CustomShader.sp_Image, "vPosition");
         // Enable generic vertex attribute array
@@ -125,10 +127,11 @@ public class Mesh {
         // Disable vertex array
         GLES20.glDisableVertexAttribArray(mPositionHandle);
         GLES20.glDisableVertexAttribArray(mTexCoordLoc);
-        left -= 1f;
+        left += 1f;
         right -= 1f;
-        bottom -= 1f;
+        bottom += 1f;
         top -= 1f;
+        lifeCounter += 0.2;
         Log.d("<^>", left + "," + top + "," + right + "," + bottom);
     }
 
@@ -161,16 +164,32 @@ public class Mesh {
         colorBuffer.position(0);
     }
 
+    public float getLeft() {
+        return left;
+    }
+
+    public void setLeft(float value) {
+        left = value;
+    }
+
+    public float getRight() {
+        return right;
+    }
+
     public void setRight(float value) {
         right = value;
+    }
+
+    public float getTop() {
+        return top;
     }
 
     public void setTop(float value) {
         top = value;
     }
 
-    public void setLeft(float value) {
-        left = value;
+    public float getBottom() {
+        return bottom;
     }
 
     public void setBottom(float value) {
