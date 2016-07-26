@@ -1,7 +1,6 @@
 package com.example.tejk.opengl_fingerpaint;
 import android.content.Context;
 import android.opengl.GLSurfaceView;
-import android.util.Log;
 import android.view.MotionEvent;
 /**
  * My name is Tej, and I am a valid poo-poo.
@@ -17,7 +16,7 @@ public class CustomGLSurface extends GLSurfaceView{
         setEGLContextClientVersion(2);
 
         // Set the Renderer for drawing on the GLSurfaceView
-        mRenderer = new CustomGLRender(context);
+        mRenderer = new CustomGLRender(context, this);
         setRenderer(mRenderer);
 
         // Render the view only when there is a change in the drawing data
@@ -41,9 +40,8 @@ public class CustomGLSurface extends GLSurfaceView{
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        Log.d("<^>","Event action:" + event.getAction());
         if(event.getAction() == MotionEvent.ACTION_MOVE) {
-            mRenderer.processTouchEvent(event, this);
+            mRenderer.processTouchEvent(event);
         }
         return true;
     }
