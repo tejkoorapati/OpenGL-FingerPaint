@@ -1,7 +1,6 @@
 package com.example.tejk.opengl_fingerpaint;
 import android.content.Context;
 import android.opengl.GLES20;
-import android.util.Log;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -41,12 +40,13 @@ public class Mesh {
     private void setupTriangle() {
         // We have create the vertices of our view.
         vertices = new float[]
-                {left, top, 0.0f,
-                        left, bottom, 0.0f,
-                        right, bottom, 0.0f,
-                        right, top, 0.0f,
+                {
+                        left, bottom,
+                        left, top,
+                        right, bottom,
+                        right, top,
                 };
-        indices = new int[]{0, 1, 2, 0, 2, 3}; // loop in the android official tutorial opengles why different order.
+        indices = new int[]{0, 1, 2, 3, 0}; // loop in the android official tutorial opengles why different order.
         color = new float[]
                 {1f,
                         1f,
@@ -91,40 +91,26 @@ public class Mesh {
     public void draw(float m[]) {
         calcPoints();
         setColorBuffer(1 - (1 - (1 / lifeCounter)), color[1], color[2], 0.2f);
-//        Log.d("<^>",String.valueOf(color[3]));
         int mPositionHandle = GLES20.glGetAttribLocation(CustomShader.sp_Image, "vPosition");
-        // Enable generic vertex attribute array
         GLES20.glEnableVertexAttribArray(mPositionHandle);
-        // Prepare the triangle coordinate data
-        GLES20.glVertexAttribPointer(mPositionHandle, 3,
+        GLES20.glVertexAttribPointer(mPositionHandle, 2,
                                      GLES20.GL_FLOAT, false,
                                      0, vertexBuffer);
         int colorHandle = GLES20.glGetUniformLocation(CustomShader.sp_Image, "a_color");
-        // Enable generic vertex attribute array
-//        GLES20.glEnableVertexAttribArray(colorHandle);
-        // Prepare the triangle coordinate data
-//        GLES20.glVertexAttribPointer(colorHandle, 4, GLES20.GL_FLOAT, false, 0, colorBuffer);
         GLES20.glUniform4f(colorHandle, color[0], color[1], color[2], color[3]);
-        // Get handle to texture coordinates location
         int mTexCoordLoc = GLES20.glGetAttribLocation(CustomShader.sp_Image, "a_texCoord");
-        // Enable generic vertex attribute array
         GLES20.glEnableVertexAttribArray(mTexCoordLoc);
-        // Prepare the texturecoordinates
         GLES20.glVertexAttribPointer(mTexCoordLoc, 2, GLES20.GL_FLOAT,
                                      false,
                                      0, uvBuffer);
-        // Get handle to shape's transformation matrix‘
         int mtrxhandle = GLES20.glGetUniformLocation(CustomShader.sp_Image, "uMVPMatrix");
-        // Apply the projection and view transformation
         GLES20.glUniformMatrix4fv(mtrxhandle, 1, false, m, 0);
-        // Get handle to textures locations
         int mSamplerLoc = GLES20.glGetUniformLocation(CustomShader.sp_Image, "s_texture");
         // Set the sampler texture unit to 0, where we have saved the texture.
         GLES20.glUniform1i(mSamplerLoc, 0);
         // Draw the triangle
-        GLES20.glDrawElements(GLES20.GL_TRIANGLE_FAN, indices.length,
-                              GLES20.GL_UNSIGNED_INT, drawListBuffer);
-        // Disable vertex array
+        GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, indices.length, GLES20.GL_UNSIGNED_INT, drawListBuffer);
+//        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
         GLES20.glDisableVertexAttribArray(mPositionHandle);
         GLES20.glDisableVertexAttribArray(mTexCoordLoc);
         left += 1f;
@@ -132,15 +118,16 @@ public class Mesh {
         bottom += 1f;
         top -= 1f;
         lifeCounter += 0.2;
-        Log.d("<^>", left + "," + top + "," + right + "," + bottom);
+//        Log.d("<^>", left + "," + top + "," + right + "," + bottom);
     }
 
     private void calcPoints() {
         vertices = new float[]
-                {left, top, 0.0f,
-                        left, bottom, 0.0f,
-                        right, bottom, 0.0f,
-                        right, top, 0.0f,
+                {
+                        left, top,
+                        left, bottom,
+                        right, bottom,
+                        right, top,
                 };
         // The vertex buffer.
         ByteBuffer bb = ByteBuffer.allocateDirect(vertices.length * 4);

@@ -72,9 +72,9 @@ public class Smoother {
                 prevPoint = point;
             }
         }
-        if (!prevPoint.equals(point)) {
-            out.add(point);
-        }
+//        if (!prevPoint.equals(point)) {
+//            out.add(point);
+//        }
     }
 
     public static float distSq(MousePoint p1, MousePoint p2) {

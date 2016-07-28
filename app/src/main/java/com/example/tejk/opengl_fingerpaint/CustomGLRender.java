@@ -35,7 +35,9 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
     long mLastTime;
     int mProgram;
     CustomGLSurface mSurface;
+    private ArrayList<Vector> mSegment;
     private int[] textureIDs;
+    private float[] segmentCoords;
 
     public CustomGLRender(Context c, CustomGLSurface surface) {
         mContext = c;
@@ -135,12 +137,15 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
         mTexture = BitmapFactory.decodeResource(mContext.getResources(), id);
         initTextures();
         mMeshes = new ConcurrentLinkedQueue<>();
+        mSegment = new ArrayList<>();
         mMousePoints = new ArrayList<>();
 //        mMesh = new Mesh(mContext,bmp);
         // Set the clear color to black
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1);
         GLES20.glEnable(GLES20.GL_BLEND);
         GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+//        GLES20.glEnable(GLES20.GL_TEXTURE_2D);
+//        GLES20.glEnable(GLES20.GL_ALPHA_TEST);
 //        GLES20.glge
         // Create the shaders
         // Set our shader programm
@@ -188,7 +193,7 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
         MousePoint mousePoint = new MousePoint(x, y);
         ArrayList<MousePoint> out = new ArrayList<>();
         mMousePoints.add(mousePoint);
-        if (mMousePoints.size() == 8) {
+        if (mMousePoints.size() == 4) {
 //            for (int i = 0; i < 100; i++) {
 ////                interpolatedX = hermiteInterpolate(mMousePoints.get(0).getX(),
 ////                                                   mMousePoints.get(1).getX(),
@@ -214,30 +219,54 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
 //                Log.d("<^>", "adding point :" + interpolatedX + " ," + interpolatedY);
 //            }
             mSmoother.resolve(mMousePoints, out);
-            for (MousePoint mousePointItem : out) {
-                addMesh(mousePointItem.getX(), mousePointItem.getY());
+//            Log.d("<^>","New size:" + out.size());
+            addMesh(out);
+            mSegment.add(new Vector(out.get(0)));
+            Vector A, B;
+            Vector C = null;
+            Vector D = null;
+            for (int i = 0; i < out.size() - 1; i++) {
+                A = new Vector(out.get(i));
+                B = new Vector(out.get(i + 1));
+                Vector perp = findPerp(A, B, C, D);
+                C = Vector.scale(Vector.sub(B, perp), 2 * (i / out.size()));
+                D = Vector.scale(Vector.add(B, perp), 2 * (i / out.size()));
+                mSegment.add(C);
+                mSegment.add(D);
             }
+            mSegment.add(new Vector(out.get(out.size() - 1)));
+
             mMousePoints.clear();
             mMousePoints.add(mousePoint);
         }
 //        addMesh(x,y);
     }
 
-    private void addMesh(final float x, final float y) {
+    private void addMesh(final ArrayList<MousePoint> mousePoints) {
         mSurface.queueEvent(new Runnable() {
             @Override
             public void run() {
-                Mesh mesh = new Mesh(mContext, textureIDs[0]);
-                mesh.setLeft((x - 50));
-                mesh.setRight((x + 50));
-                mesh.setTop(((mScreenHeight - y) + 50));
-                mesh.setBottom(((mScreenHeight - y) - 50));
-                mMeshes.add(mesh);
-                if (mMeshes.size() > 300) {
-                    mMeshes.poll();
+                for (MousePoint mousePoint : mousePoints) {
+                    float x = mousePoint.getX();
+                    float y = mousePoint.getY();
+                    Mesh mesh = new Mesh(mContext, textureIDs[0]);
+                    mesh.setLeft((x - 50));
+                    mesh.setRight((x + 50));
+                    mesh.setTop(((mScreenHeight - y) + 50));
+                    mesh.setBottom(((mScreenHeight - y) - 50));
+                    mMeshes.add(mesh);
+                    if (mMeshes.size() > 300) {
+                        mMeshes.poll();
+                    }
                 }
             }
         });
+    }
+
+    private Vector findPerp(Vector A, Vector B, Vector C, Vector D) {
+        Vector dir = Vector.sub(B, A);
+        Vector nDir = Vector.normalize(dir);
+        return new Vector(-1 * nDir.y, nDir.x);
     }
 
     /*
@@ -263,5 +292,14 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
         a2 = mu3 - mu2;
         a3 = -2 * mu3 + 3 * mu2;
         return (a0 * pointB + a1 * m0 + a2 * m1 + a3 * pointC);
+    }
+
+    private float[] Vector2DListToArray(ArrayList<Vector> in) {
+        float out[] = new float[in.size() * 2];
+        for (int i = 0; i < in.size(); i++) {
+            out[i] = (float) in.get(i).x;
+            out[i + 1] = (float) in.get(i).y;
+        }
+        return out;
     }
 }
