@@ -27,14 +27,16 @@ public class Mesh {
     private FloatBuffer colorBuffer;
     private FloatBuffer uvBuffer;
     private IntBuffer drawListBuffer;
-    private float lifeCounter;
+    private float lifeCounterAlpha;
+    private float lifeCounterSize;
 
     public Mesh(Context context, int textureId) {
         mContext = context;
         mTextureId = textureId;
         setupTriangle();
         setupImage();
-        lifeCounter = 1;
+        lifeCounterAlpha = 1;
+        lifeCounterSize = 1;
     }
 
     private void setupTriangle() {
@@ -90,7 +92,7 @@ public class Mesh {
 
     public void draw(float m[]) {
         calcPoints();
-        setColorBuffer(1 - (1 - (1 / lifeCounter)), color[1], color[2], 1/lifeCounter);
+        setColorBuffer(1 - (1 - (1 / lifeCounterAlpha)), color[1], color[2], 1/ lifeCounterAlpha);
         int mPositionHandle = GLES20.glGetAttribLocation(CustomShader.sp_Image, "vPosition");
         GLES20.glEnableVertexAttribArray(mPositionHandle);
         GLES20.glVertexAttribPointer(mPositionHandle, 2,
@@ -113,11 +115,13 @@ public class Mesh {
 //        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
         GLES20.glDisableVertexAttribArray(mPositionHandle);
         GLES20.glDisableVertexAttribArray(mTexCoordLoc);
-        left += 1f;
-        right -= 1f;
-        bottom += 1f;
-        top -= 1f;
-        lifeCounter += lifeCounter/2.5;
+        lifeCounterAlpha += lifeCounterAlpha /2.5;
+        lifeCounterSize+= lifeCounterSize /30;
+
+        left += lifeCounterSize;
+        right -= lifeCounterSize;
+        bottom += lifeCounterSize;
+        top -= lifeCounterSize;
 //        Log.d("<^>", left + "," + top + "," + right + "," + bottom);
     }
 

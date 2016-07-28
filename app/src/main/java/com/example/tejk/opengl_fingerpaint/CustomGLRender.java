@@ -193,7 +193,7 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
         MousePoint mousePoint = new MousePoint(x, y);
         ArrayList<MousePoint> out = new ArrayList<>();
         mMousePoints.add(mousePoint);
-        if (mMousePoints.size() == 4) {
+        if (mMousePoints.size() == 3) {
 //            for (int i = 0; i < 100; i++) {
 ////                interpolatedX = hermiteInterpolate(mMousePoints.get(0).getX(),
 ////                                                   mMousePoints.get(1).getX(),
