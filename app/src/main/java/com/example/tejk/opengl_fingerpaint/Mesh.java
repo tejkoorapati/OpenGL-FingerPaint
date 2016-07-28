@@ -90,7 +90,7 @@ public class Mesh {
 
     public void draw(float m[]) {
         calcPoints();
-        setColorBuffer(1 - (1 - (1 / lifeCounter)), color[1], color[2], 0.2f);
+        setColorBuffer(1 - (1 - (1 / lifeCounter)), color[1], color[2], 1/lifeCounter);
         int mPositionHandle = GLES20.glGetAttribLocation(CustomShader.sp_Image, "vPosition");
         GLES20.glEnableVertexAttribArray(mPositionHandle);
         GLES20.glVertexAttribPointer(mPositionHandle, 2,
@@ -117,7 +117,7 @@ public class Mesh {
         right -= 1f;
         bottom += 1f;
         top -= 1f;
-        lifeCounter += 0.2;
+        lifeCounter += lifeCounter/2.5;
 //        Log.d("<^>", left + "," + top + "," + right + "," + bottom);
     }
 

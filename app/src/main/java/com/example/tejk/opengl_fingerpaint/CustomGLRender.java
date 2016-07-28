@@ -143,7 +143,7 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
         // Set the clear color to black
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1);
         GLES20.glEnable(GLES20.GL_BLEND);
-        GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
 //        GLES20.glEnable(GLES20.GL_TEXTURE_2D);
 //        GLES20.glEnable(GLES20.GL_ALPHA_TEST);
 //        GLES20.glge
@@ -228,7 +228,7 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
             for (int i = 0; i < out.size() - 1; i++) {
                 A = new Vector(out.get(i));
                 B = new Vector(out.get(i + 1));
-                Vector perp = findPerp(A, B, C, D);
+                Vector perp = findPerp(A, B);
                 C = Vector.scale(Vector.sub(B, perp), 2 * (i / out.size()));
                 D = Vector.scale(Vector.add(B, perp), 2 * (i / out.size()));
                 mSegment.add(C);
@@ -263,7 +263,7 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
         });
     }
 
-    private Vector findPerp(Vector A, Vector B, Vector C, Vector D) {
+    private Vector findPerp(Vector A, Vector B) {
         Vector dir = Vector.sub(B, A);
         Vector nDir = Vector.normalize(dir);
         return new Vector(-1 * nDir.y, nDir.x);
