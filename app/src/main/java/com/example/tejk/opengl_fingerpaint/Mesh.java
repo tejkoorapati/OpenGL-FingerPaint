@@ -100,21 +100,19 @@ public class Mesh {
                                      0, vertexBuffer);
         int colorHandle = GLES20.glGetUniformLocation(CustomShader.sp_Image, "a_color");
         GLES20.glUniform4f(colorHandle, color[0], color[1], color[2], color[3]);
-        int mTexCoordLoc = GLES20.glGetAttribLocation(CustomShader.sp_Image, "a_texCoord");
-        GLES20.glEnableVertexAttribArray(mTexCoordLoc);
-        GLES20.glVertexAttribPointer(mTexCoordLoc, 2, GLES20.GL_FLOAT,
-                                     false,
-                                     0, uvBuffer);
+//        int mTexCoordLoc = GLES20.glGetAttribLocation(CustomShader.sp_Image, "a_texCoord");
+//        GLES20.glEnableVertexAttribArray(mTexCoordLoc);
+//        GLES20.glVertexAttribPointer(mTexCoordLoc, 2, GLES20.GL_FLOAT,                                     false,0, uvBuffer);
         int mtrxhandle = GLES20.glGetUniformLocation(CustomShader.sp_Image, "uMVPMatrix");
         GLES20.glUniformMatrix4fv(mtrxhandle, 1, false, m, 0);
-        int mSamplerLoc = GLES20.glGetUniformLocation(CustomShader.sp_Image, "s_texture");
+//        int mSamplerLoc = GLES20.glGetUniformLocation(CustomShader.sp_Image, "s_texture");
         // Set the sampler texture unit to 0, where we have saved the texture.
-        GLES20.glUniform1i(mSamplerLoc, 0);
+//        GLES20.glUniform1i(mSamplerLoc, 0);
         // Draw the triangle
         GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, indices.length, GLES20.GL_UNSIGNED_INT, drawListBuffer);
 //        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
         GLES20.glDisableVertexAttribArray(mPositionHandle);
-        GLES20.glDisableVertexAttribArray(mTexCoordLoc);
+//        GLES20.glDisableVertexAttribArray(mTexCoordLoc);
         lifeCounterAlpha += lifeCounterAlpha /2.5;
         lifeCounterSize+= lifeCounterSize /30;
 

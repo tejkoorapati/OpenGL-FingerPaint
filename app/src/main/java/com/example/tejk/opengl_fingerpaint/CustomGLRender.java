@@ -9,6 +9,10 @@ import android.opengl.Matrix;
 import android.util.Log;
 import android.view.MotionEvent;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -23,7 +27,7 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
     private final float[] mtrxView = new float[16];
     private final float[] mtrxProjectionAndView = new float[16];
     ConcurrentLinkedQueue<Mesh> mMeshes;
-    ArrayList<MousePoint> mMousePoints;
+    ConcurrentLinkedQueue<MousePoint> mMousePoints;
     float[] mousePoints;
     Bitmap mTexture;
     Smoother mSmoother = new Smoother();
@@ -36,8 +40,13 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
     int mProgram;
     CustomGLSurface mSurface;
     private ArrayList<Vector> mSegment;
-    private int[] textureIDs;
+    private int[] textureIDs = new int[1];
+    private FloatBuffer swipeBuffer = ByteBuffer.allocateDirect(0).asFloatBuffer();
+    private IntBuffer indexBuffer =  ByteBuffer.allocateDirect(0).asIntBuffer();;
+    private FloatBuffer colorBuffer =  ByteBuffer.allocateDirect(0).asFloatBuffer();;
     private float[] segmentCoords;
+    private int[] indices = new int[0];
+    private float[] colorArray = new    float[0];
 
     public CustomGLRender(Context c, CustomGLSurface surface) {
         mContext = c;
@@ -81,7 +90,23 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
     private void Render(float[] m) {
         // clear Screen and Depth Buffer, we have set the clear color as black.
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
-        if (mMeshes != null) {
+        int mPositionHandle = GLES20.glGetAttribLocation(CustomShader.sp_Image, "vPosition");
+        GLES20.glEnableVertexAttribArray(mPositionHandle);
+        GLES20.glVertexAttribPointer(mPositionHandle, 2,GLES20.GL_FLOAT, false, 0, swipeBuffer);
+        int colorHandle = GLES20.glGetAttribLocation(CustomShader.sp_Image, "a_color");
+        GLES20.glEnableVertexAttribArray(colorHandle);
+        GLES20.glVertexAttribPointer(colorHandle, 4,GLES20.GL_FLOAT, false, 0, colorBuffer);
+
+//        GLES20.glUniform4f(colorHandle, 1, 0, 0, 1);
+        int mtrxhandle = GLES20.glGetUniformLocation(CustomShader.sp_Image, "uMVPMatrix");
+        GLES20.glUniformMatrix4fv(mtrxhandle, 1, false, m, 0);
+        GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, indices.length, GLES20.GL_UNSIGNED_INT, indexBuffer);
+//        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+        GLES20.glDisableVertexAttribArray(mPositionHandle);
+
+
+/*
+        if (mMeshes != null && !mMeshes.isEmpty()) {
             for (Mesh mesh : mMeshes) {
                 if (mesh.getTop() - mesh.getBottom() < 30 || mesh.getRight() - mesh.getLeft() < 30) {
                     mMeshes.poll();
@@ -90,6 +115,7 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
                 mesh.draw(m);
             }
         }
+        */
     }
 
     @Override
@@ -135,10 +161,10 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
                                                        mContext.getPackageName());
         // Temporary create a bitmap
         mTexture = BitmapFactory.decodeResource(mContext.getResources(), id);
-        initTextures();
+//        initTextures();
         mMeshes = new ConcurrentLinkedQueue<>();
         mSegment = new ArrayList<>();
-        mMousePoints = new ArrayList<>();
+        mMousePoints = new ConcurrentLinkedQueue<>();
 //        mMesh = new Mesh(mContext,bmp);
         // Set the clear color to black
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1);
@@ -193,53 +219,92 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
         MousePoint mousePoint = new MousePoint(x, y);
         ArrayList<MousePoint> out = new ArrayList<>();
         mMousePoints.add(mousePoint);
-        if (mMousePoints.size() == 3) {
-//            for (int i = 0; i < 100; i++) {
-////                interpolatedX = hermiteInterpolate(mMousePoints.get(0).getX(),
-////                                                   mMousePoints.get(1).getX(),
-////                                                   mMousePoints.get(2).getX(),
-////                                                   mMousePoints.get(3).getX(),
-////                                                   i/50f);
-////                interpolatedY = hermiteInterpolate(mMousePoints.get(0).getY(),
-////                                                   mMousePoints.get(1).getY(),
-////                                                   mMousePoints.get(2).getY(),
-////                                                   mMousePoints.get(3).getY(),
-////                                                   i/50f);
-//                interpolatedX = InterpolateHermite4pt3oX(mMousePoints.get(0).getX(),
-//                                                         mMousePoints.get(1).getX(),
-//                                                         mMousePoints.get(2).getX(),
-//                                                         mMousePoints.get(3).getX(),
-//                                                         (i / 100f) * 4 - 1);
-//                interpolatedY = InterpolateHermite4pt3oX(mMousePoints.get(0).getY(),
-//                                                         mMousePoints.get(1).getY(),
-//                                                         mMousePoints.get(2).getY(),
-//                                                         mMousePoints.get(3).getY(),
-//                                                         i / 100f * 4 - 1);
-//                addMesh(interpolatedX, interpolatedY);
-//                Log.d("<^>", "adding point :" + interpolatedX + " ," + interpolatedY);
-//            }
-            mSmoother.resolve(mMousePoints, out);
+        if (mMousePoints.size() > 3) {
+            mSegment.clear();
+            mSmoother.resolve(new ArrayList<>(mMousePoints), out);
 //            Log.d("<^>","New size:" + out.size());
-            addMesh(out);
-            mSegment.add(new Vector(out.get(0)));
+//            addMesh(out);
             Vector A, B;
             Vector C = null;
             Vector D = null;
-            for (int i = 0; i < out.size() - 1; i++) {
-                A = new Vector(out.get(i));
-                B = new Vector(out.get(i + 1));
-                Vector perp = findPerp(A, B);
-                C = Vector.scale(Vector.sub(B, perp), 2 * (i / out.size()));
-                D = Vector.scale(Vector.add(B, perp), 2 * (i / out.size()));
-                mSegment.add(C);
-                mSegment.add(D);
+            for (int i = 0; i < out.size(); i++) {
+                if (i == 0 || i == out.size() - 1) {
+                    mSegment.add(convertToGLCoords(new Vector(out.get(i))));
+                } else {
+                    A = new Vector(out.get(i));
+                    B = new Vector(out.get(i + 1));
+                    Vector perp = findPerp(A, B);
+                    C = convertToGLCoords(Vector.add(B, Vector.scale(perp, 20 * ((float) i / out.size()))));
+                    D = convertToGLCoords(Vector.sub(B, Vector.scale(perp, 20 * ((float) i / out.size()))));
+                    mSegment.add(C);
+                    mSegment.add(D);
+                }
             }
-            mSegment.add(new Vector(out.get(out.size() - 1)));
-
-            mMousePoints.clear();
-            mMousePoints.add(mousePoint);
+            if (mMousePoints.size() > 50) {
+                mMousePoints.poll();
+            }
+//            mMousePoints.clear();
+//            mMousePoints.add(mousePoint);
         }
+        mSurface.queueEvent(new Runnable() {
+            @Override
+            public void run() {
+                setupBuffers();
+            }
+        });
+
 //        addMesh(x,y);
+    }
+
+    private Vector findPerp(Vector A, Vector B) {
+        Vector dir = Vector.sub(B, A);
+        Vector nDir = Vector.normalize(dir);
+        return new Vector(-1 * nDir.y, nDir.x);
+    }
+
+    private void setupBuffers() {
+        float floatArray[] = Vector2DListToArray(mSegment);
+        indices = new int[floatArray.length / 2];
+        colorArray = new float[floatArray.length * 2];
+        int j = 0;
+        for (int i = 0; i < indices.length; i++) {
+            indices[i] = i;
+            colorArray[j] = (float)i / indices.length;
+            colorArray[j+ 1] = 0;
+            colorArray[j + 2] = 0;
+            colorArray[j + 3] = 1;
+            j+=4;
+        }
+        ByteBuffer bb = ByteBuffer.allocateDirect(floatArray.length * 4);
+        bb.order(ByteOrder.nativeOrder());
+        swipeBuffer = bb.asFloatBuffer();
+        swipeBuffer.put(floatArray);
+        swipeBuffer.position(0);
+        ByteBuffer cb = ByteBuffer.allocateDirect(colorArray.length * 4);
+        cb.order(ByteOrder.nativeOrder());
+        colorBuffer = cb.asFloatBuffer();
+        colorBuffer.put(colorArray);
+        colorBuffer.position(0);
+        ByteBuffer dlb = ByteBuffer.allocateDirect(indices.length * 4);
+        dlb.order(ByteOrder.nativeOrder());
+        indexBuffer = dlb.asIntBuffer();
+        indexBuffer.put(indices);
+        indexBuffer.position(0);
+    }
+
+    private float[] Vector2DListToArray(ArrayList<Vector> in) {
+        ArrayList<Vector> inCopy = (ArrayList<Vector>) in.clone();
+        int inSize = inCopy.size();
+        float out[] = new float[inSize * 2];
+        for (int i = 0; i < inSize; i++) {
+            out[2 * i] = (float) inCopy.get(i).x;
+            out[2 * i + 1] = (float) inCopy.get(i).y;
+        }
+        return out;
+    }
+
+    private Vector convertToGLCoords(Vector in) {
+        return new Vector(in.x, mScreenHeight - in.y);
     }
 
     private void addMesh(final ArrayList<MousePoint> mousePoints) {
@@ -261,12 +326,6 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
                 }
             }
         });
-    }
-
-    private Vector findPerp(Vector A, Vector B) {
-        Vector dir = Vector.sub(B, A);
-        Vector nDir = Vector.normalize(dir);
-        return new Vector(-1 * nDir.y, nDir.x);
     }
 
     /*
@@ -294,12 +353,4 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
         return (a0 * pointB + a1 * m0 + a2 * m1 + a3 * pointC);
     }
 
-    private float[] Vector2DListToArray(ArrayList<Vector> in) {
-        float out[] = new float[in.size() * 2];
-        for (int i = 0; i < in.size(); i++) {
-            out[i] = (float) in.get(i).x;
-            out[i + 1] = (float) in.get(i).y;
-        }
-        return out;
-    }
 }
