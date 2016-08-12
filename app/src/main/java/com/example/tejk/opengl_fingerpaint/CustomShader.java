@@ -44,13 +44,6 @@ public class CustomShader {
                     "  gl_FragColor = v_color;" +
                     "}";
 
-    /* SHADER Solid
-     *
-     * This shader is for rendering a colored primitive.
-     *
-     */
-    // Program variables
-    public static int sp_SolidColor;
     public static int sp_Image;
 
     public static int loadShader(int type, String shaderCode){

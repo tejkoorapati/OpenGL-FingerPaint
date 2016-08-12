@@ -40,7 +40,9 @@ public class CustomGLSurface extends GLSurfaceView{
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if(event.getAction() == MotionEvent.ACTION_MOVE) {
+
+        if(event.getAction() == MotionEvent.ACTION_MOVE ||
+                event.getAction() == MotionEvent.ACTION_POINTER_DOWN) {
             mRenderer.processTouchEvent(event);
         }
         return true;

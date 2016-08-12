@@ -4,16 +4,10 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
-import android.opengl.GLUtils;
 import android.opengl.Matrix;
 import android.util.Log;
 import android.view.MotionEvent;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
-import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.microedition.khronos.egl.EGLConfig;
@@ -39,14 +33,8 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
     long mLastTime;
     int mProgram;
     CustomGLSurface mSurface;
-    private ArrayList<Vector> mSegment;
-    private int[] textureIDs = new int[1];
-    private FloatBuffer swipeBuffer = ByteBuffer.allocateDirect(0).asFloatBuffer();
-    private IntBuffer indexBuffer =  ByteBuffer.allocateDirect(0).asIntBuffer();;
-    private FloatBuffer colorBuffer =  ByteBuffer.allocateDirect(0).asFloatBuffer();;
-    private float[] segmentCoords;
-    private int[] indices = new int[0];
-    private float[] colorArray = new    float[0];
+    private SwipeMesh swipeMesh1;
+    private SwipeMesh swipeMesh2;
 
     public CustomGLRender(Context c, CustomGLSurface surface) {
         mContext = c;
@@ -90,19 +78,12 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
     private void Render(float[] m) {
         // clear Screen and Depth Buffer, we have set the clear color as black.
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
-        int mPositionHandle = GLES20.glGetAttribLocation(CustomShader.sp_Image, "vPosition");
-        GLES20.glEnableVertexAttribArray(mPositionHandle);
-        GLES20.glVertexAttribPointer(mPositionHandle, 2,GLES20.GL_FLOAT, false, 0, swipeBuffer);
-        int colorHandle = GLES20.glGetAttribLocation(CustomShader.sp_Image, "a_color");
-        GLES20.glEnableVertexAttribArray(colorHandle);
-        GLES20.glVertexAttribPointer(colorHandle, 4,GLES20.GL_FLOAT, false, 0, colorBuffer);
-
 //        GLES20.glUniform4f(colorHandle, 1, 0, 0, 1);
         int mtrxhandle = GLES20.glGetUniformLocation(CustomShader.sp_Image, "uMVPMatrix");
         GLES20.glUniformMatrix4fv(mtrxhandle, 1, false, m, 0);
-        GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, indices.length, GLES20.GL_UNSIGNED_INT, indexBuffer);
-//        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
-        GLES20.glDisableVertexAttribArray(mPositionHandle);
+
+        swipeMesh1.draw(m);
+        swipeMesh2.draw(m);
 
 
 /*
@@ -123,6 +104,8 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
         // We need to know the current width and height.
         mScreenWidth = width;
         mScreenHeight = height;
+        swipeMesh1.setScreenHeight(height);
+        swipeMesh2.setScreenHeight(height);
         // Redo the Viewport, making it fullscreen.
         GLES20.glViewport(0, 0, (int) mScreenWidth, (int) mScreenHeight);
         // Clear our matrices
@@ -163,7 +146,8 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
         mTexture = BitmapFactory.decodeResource(mContext.getResources(), id);
 //        initTextures();
         mMeshes = new ConcurrentLinkedQueue<>();
-        mSegment = new ArrayList<>();
+        swipeMesh1 = new SwipeMesh(mScreenHeight,mSurface);
+        swipeMesh2 = new SwipeMesh(mScreenHeight,mSurface);
         mMousePoints = new ConcurrentLinkedQueue<>();
 //        mMesh = new Mesh(mContext,bmp);
         // Set the clear color to black
@@ -190,70 +174,38 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
     }
 
     private void initTextures() {
-        textureIDs = new int[1];
-        GLES20.glGenTextures(1, textureIDs, 0);
-        // Retrieve our image from resources.
-        // Bind texture to texturename
-        GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureIDs[0]);
-        // Set filtering
-        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER,
-                               GLES20.GL_LINEAR);
-        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER,
-                               GLES20.GL_LINEAR);
-        // Set wrapping mode
-        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S,
-                               GLES20.GL_CLAMP_TO_EDGE);
-        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T,
-                               GLES20.GL_CLAMP_TO_EDGE);
-        // Load the bitmap into the bound texture.
-        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, mTexture, 0);
+//        textureIDs = new int[1];
+//        GLES20.glGenTextures(1, textureIDs, 0);
+//        // Retrieve our image from resources.
+//        // Bind texture to texturename
+//        GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+//        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureIDs[0]);
+//        // Set filtering
+//        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER,
+//                               GLES20.GL_LINEAR);
+//        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER,
+//                               GLES20.GL_LINEAR);
+//        // Set wrapping mode
+//        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S,
+//                               GLES20.GL_CLAMP_TO_EDGE);
+//        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T,
+//                               GLES20.GL_CLAMP_TO_EDGE);
+//        // Load the bitmap into the bound texture.
+//        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, mTexture, 0);
     }
 
     public void processTouchEvent(MotionEvent event) {
-        // Get the half of screen value
-        final float x = event.getX();
-        final float y = event.getY();
-        float interpolatedX;
-        float interpolatedY;
-        MousePoint mousePoint = new MousePoint(x, y);
-        ArrayList<MousePoint> out = new ArrayList<>();
-        mMousePoints.add(mousePoint);
-        if (mMousePoints.size() > 3) {
-            mSegment.clear();
-            mSmoother.resolve(new ArrayList<>(mMousePoints), out);
-//            Log.d("<^>","New size:" + out.size());
-//            addMesh(out);
-            Vector A, B;
-            Vector C = null;
-            Vector D = null;
-            for (int i = 0; i < out.size(); i++) {
-                if (i == 0 || i == out.size() - 1) {
-                    mSegment.add(convertToGLCoords(new Vector(out.get(i))));
-                } else {
-                    A = new Vector(out.get(i));
-                    B = new Vector(out.get(i + 1));
-                    Vector perp = findPerp(A, B);
-                    C = convertToGLCoords(Vector.add(B, Vector.scale(perp, 20 * ((float) i / out.size()))));
-                    D = convertToGLCoords(Vector.sub(B, Vector.scale(perp, 20 * ((float) i / out.size()))));
-                    mSegment.add(C);
-                    mSegment.add(D);
-                }
+        int pointerIndex;
+        if(event.getPointerCount() <= 2) {
+            if (event.findPointerIndex(0) != -1) {
+                pointerIndex = event.findPointerIndex(0);
+                swipeMesh1.addPoint(new Vector(event.getX(pointerIndex), event.getY(pointerIndex)), 1, 0, 0, 1);
             }
-            if (mMousePoints.size() > 50) {
-                mMousePoints.poll();
+            if (event.findPointerIndex(1) != -1) {
+                pointerIndex = event.findPointerIndex(1);
+                swipeMesh2.addPoint(new Vector(event.getX(pointerIndex), event.getY(pointerIndex)), 1, 0, 0, 1);
             }
-//            mMousePoints.clear();
-//            mMousePoints.add(mousePoint);
         }
-        mSurface.queueEvent(new Runnable() {
-            @Override
-            public void run() {
-                setupBuffers();
-            }
-        });
-
-//        addMesh(x,y);
     }
 
     private Vector findPerp(Vector A, Vector B) {
@@ -262,71 +214,6 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
         return new Vector(-1 * nDir.y, nDir.x);
     }
 
-    private void setupBuffers() {
-        float floatArray[] = Vector2DListToArray(mSegment);
-        indices = new int[floatArray.length / 2];
-        colorArray = new float[floatArray.length * 2];
-        int j = 0;
-        for (int i = 0; i < indices.length; i++) {
-            indices[i] = i;
-            colorArray[j] = (float)i / indices.length;
-            colorArray[j+ 1] = 0;
-            colorArray[j + 2] = 0;
-            colorArray[j + 3] = 1;
-            j+=4;
-        }
-        ByteBuffer bb = ByteBuffer.allocateDirect(floatArray.length * 4);
-        bb.order(ByteOrder.nativeOrder());
-        swipeBuffer = bb.asFloatBuffer();
-        swipeBuffer.put(floatArray);
-        swipeBuffer.position(0);
-        ByteBuffer cb = ByteBuffer.allocateDirect(colorArray.length * 4);
-        cb.order(ByteOrder.nativeOrder());
-        colorBuffer = cb.asFloatBuffer();
-        colorBuffer.put(colorArray);
-        colorBuffer.position(0);
-        ByteBuffer dlb = ByteBuffer.allocateDirect(indices.length * 4);
-        dlb.order(ByteOrder.nativeOrder());
-        indexBuffer = dlb.asIntBuffer();
-        indexBuffer.put(indices);
-        indexBuffer.position(0);
-    }
-
-    private float[] Vector2DListToArray(ArrayList<Vector> in) {
-        ArrayList<Vector> inCopy = (ArrayList<Vector>) in.clone();
-        int inSize = inCopy.size();
-        float out[] = new float[inSize * 2];
-        for (int i = 0; i < inSize; i++) {
-            out[2 * i] = (float) inCopy.get(i).x;
-            out[2 * i + 1] = (float) inCopy.get(i).y;
-        }
-        return out;
-    }
-
-    private Vector convertToGLCoords(Vector in) {
-        return new Vector(in.x, mScreenHeight - in.y);
-    }
-
-    private void addMesh(final ArrayList<MousePoint> mousePoints) {
-        mSurface.queueEvent(new Runnable() {
-            @Override
-            public void run() {
-                for (MousePoint mousePoint : mousePoints) {
-                    float x = mousePoint.getX();
-                    float y = mousePoint.getY();
-                    Mesh mesh = new Mesh(mContext, textureIDs[0]);
-                    mesh.setLeft((x - 50));
-                    mesh.setRight((x + 50));
-                    mesh.setTop(((mScreenHeight - y) + 50));
-                    mesh.setBottom(((mScreenHeight - y) - 50));
-                    mMeshes.add(mesh);
-                    if (mMeshes.size() > 300) {
-                        mMeshes.poll();
-                    }
-                }
-            }
-        });
-    }
 
     /*
    Tension: 1 is high, 0 normal, -1 is low

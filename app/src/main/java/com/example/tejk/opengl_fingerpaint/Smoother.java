@@ -1,14 +1,22 @@
 package com.example.tejk.opengl_fingerpaint;
+import android.util.Log;
+
 import java.util.ArrayList;
 /**
  * Created by tej on 7/25/16.
  */
 public class Smoother {
     public static int iterations = 2;
-    public static float simplifyTolerance = 35f;
-    private ArrayList<MousePoint> tmp = new ArrayList<>();
+    public static double simplifyTolerance = 35f;
+    private ArrayList<MeshPoint> tmp = new ArrayList<>();
 
-    public void resolve(ArrayList<MousePoint> input, ArrayList<MousePoint> output) {
+    public static float linearInterpolation(float a, float b, float t) {
+        float out = (Math.abs(a - b) * t) + a;
+        Log.d("<^>", " " + a + " " + b + " " + t + " out: " + out);
+        return out;
+    }
+
+    public void resolve(ArrayList<MeshPoint> input, ArrayList<MeshPoint> output) {
         output.clear();
         if (input.size() <= 2) { //simple copy
             output.addAll(input);
@@ -31,14 +39,14 @@ public class Smoother {
                 smooth(input, output);
                 tmp.clear();
                 tmp.addAll(output);
-                ArrayList<MousePoint> old = output;
+                ArrayList<MeshPoint> old = output;
                 input = tmp;
                 output = old;
             } while (--iters > 0);
         }
     }
 
-    public static void smooth(ArrayList<MousePoint> input, ArrayList<MousePoint> output) {
+    public static void smooth(ArrayList<MeshPoint> input, ArrayList<MeshPoint> output) {
         //expected size
         output.clear();
         output.ensureCapacity(input.size() * 2);
@@ -46,10 +54,16 @@ public class Smoother {
         output.add(input.get(0));
         //average elements
         for (int i = 0; i < input.size() - 1; i++) {
-            MousePoint p0 = input.get(i);
-            MousePoint p1 = input.get(i + 1);
-            MousePoint Q = new MousePoint(0.75f * p0.getX() + 0.25f * p1.getX(), 0.75f * p0.getY() + 0.25f * p1.getY());
-            MousePoint R = new MousePoint(0.25f * p0.getX() + 0.75f * p1.getX(), 0.25f * p0.getY() + 0.75f * p1.getY());
+            MeshPoint p0 = input.get(i);
+            MeshPoint p1 = input.get(i + 1);
+            MeshPoint Q = new MeshPoint(0.75f * p0.point.x + 0.25f * p1.point.x,
+                                        0.75f * p0.point.y + 0.25f * p1.point.y,
+                                        interpolateColor(p0.color, p1.color, 0.25f),
+                                        p0.age * 0.75f + p1.age * .25f);
+            MeshPoint R = new MeshPoint(0.25f * p0.point.x + 0.75f * p1.point.x,
+                                        0.25f * p0.point.y + 0.75f * p1.point.y,
+                                        interpolateColor(p0.color, p1.color, 0.75f),
+                                        p0.age * 0.25f + p1.age * .75f);
             output.add(Q);
             output.add(R);
         }
@@ -57,12 +71,22 @@ public class Smoother {
         output.add(input.get(input.size() - 1));
     }
 
+    public static ColorV4 interpolateColor(ColorV4 a, ColorV4 b, float t) {
+        return new ColorV4
+                (
+                        a.R + (b.R - a.R) * t,
+                        a.G + (b.G - a.G) * t,
+                        a.B + (b.B - a.B) * t,
+                        a.A + (b.A - a.A) * t
+                );
+    }
+
     //simple distance-based simplification
     //adapted from simplify.js
-    public static void simplify(ArrayList<MousePoint> points, float sqTolerance, ArrayList<MousePoint> out) {
+    public static void simplify(ArrayList<MeshPoint> points, double sqTolerance, ArrayList<MeshPoint> out) {
         int len = points.size();
-        MousePoint point = new MousePoint(0, 0);
-        MousePoint prevPoint = points.get(0);
+        MeshPoint point;
+        MeshPoint prevPoint = points.get(0);
         out.clear();
         out.add(prevPoint);
         for (int i = 1; i < len; i++) {
@@ -77,8 +101,9 @@ public class Smoother {
 //        }
     }
 
-    public static float distSq(MousePoint p1, MousePoint p2) {
-        float dx = p1.getX() - p2.getX(), dy = p1.getY() - p2.getY();
+    public static double distSq(MeshPoint p1, MeshPoint p2) {
+        double dx = p1.point.x - p2.point.x, dy = p1.point.y - p2.point.y;
         return dx * dx + dy * dy;
     }
+
 }
