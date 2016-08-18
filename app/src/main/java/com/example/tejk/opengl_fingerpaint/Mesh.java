@@ -93,19 +93,19 @@ public class Mesh {
     public void draw(float m[]) {
         calcPoints();
         setColorBuffer(1 - (1 - (1 / lifeCounterAlpha)), color[1], color[2], 1/ lifeCounterAlpha);
-        int mPositionHandle = GLES20.glGetAttribLocation(CustomShader.sp_Image, "vPosition");
+        int mPositionHandle = GLES20.glGetAttribLocation(CustomShader.sp_mouse_swipe, "vPosition");
         GLES20.glEnableVertexAttribArray(mPositionHandle);
         GLES20.glVertexAttribPointer(mPositionHandle, 2,
                                      GLES20.GL_FLOAT, false,
                                      0, vertexBuffer);
-        int colorHandle = GLES20.glGetUniformLocation(CustomShader.sp_Image, "a_color");
+        int colorHandle = GLES20.glGetUniformLocation(CustomShader.sp_mouse_swipe, "a_color");
         GLES20.glUniform4f(colorHandle, color[0], color[1], color[2], color[3]);
-//        int mTexCoordLoc = GLES20.glGetAttribLocation(CustomShader.sp_Image, "a_texCoord");
+//        int mTexCoordLoc = GLES20.glGetAttribLocation(CustomShader.sp_mouse_swipe, "a_texCoord");
 //        GLES20.glEnableVertexAttribArray(mTexCoordLoc);
 //        GLES20.glVertexAttribPointer(mTexCoordLoc, 2, GLES20.GL_FLOAT,                                     false,0, uvBuffer);
-        int mtrxhandle = GLES20.glGetUniformLocation(CustomShader.sp_Image, "uMVPMatrix");
+        int mtrxhandle = GLES20.glGetUniformLocation(CustomShader.sp_mouse_swipe, "uMVPMatrix");
         GLES20.glUniformMatrix4fv(mtrxhandle, 1, false, m, 0);
-//        int mSamplerLoc = GLES20.glGetUniformLocation(CustomShader.sp_Image, "s_texture");
+//        int mSamplerLoc = GLES20.glGetUniformLocation(CustomShader.sp_mouse_swipe, "s_texture");
         // Set the sampler texture unit to 0, where we have saved the texture.
 //        GLES20.glUniform1i(mSamplerLoc, 0);
         // Draw the triangle

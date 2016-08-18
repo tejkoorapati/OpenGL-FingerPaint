@@ -58,11 +58,11 @@ public class Smoother {
             MeshPoint p1 = input.get(i + 1);
             MeshPoint Q = new MeshPoint(0.75f * p0.point.x + 0.25f * p1.point.x,
                                         0.75f * p0.point.y + 0.25f * p1.point.y,
-                                        interpolateColor(p0.color, p1.color, 0.25f),
+                                        GLUtils.interpolateColor(p0.color, p1.color, 0.25f),
                                         p0.age * 0.75f + p1.age * .25f);
             MeshPoint R = new MeshPoint(0.25f * p0.point.x + 0.75f * p1.point.x,
                                         0.25f * p0.point.y + 0.75f * p1.point.y,
-                                        interpolateColor(p0.color, p1.color, 0.75f),
+                                        GLUtils.interpolateColor(p0.color, p1.color, 0.75f),
                                         p0.age * 0.25f + p1.age * .75f);
             output.add(Q);
             output.add(R);
@@ -71,15 +71,7 @@ public class Smoother {
         output.add(input.get(input.size() - 1));
     }
 
-    public static ColorV4 interpolateColor(ColorV4 a, ColorV4 b, float t) {
-        return new ColorV4
-                (
-                        a.R + (b.R - a.R) * t,
-                        a.G + (b.G - a.G) * t,
-                        a.B + (b.B - a.B) * t,
-                        a.A + (b.A - a.A) * t
-                );
-    }
+
 
     //simple distance-based simplification
     //adapted from simplify.js

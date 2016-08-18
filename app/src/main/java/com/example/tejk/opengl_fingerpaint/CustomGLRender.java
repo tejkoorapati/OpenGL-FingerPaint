@@ -8,6 +8,7 @@ import android.opengl.Matrix;
 import android.util.Log;
 import android.view.MotionEvent;
 
+import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.microedition.khronos.egl.EGLConfig;
@@ -20,8 +21,26 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
     private final float[] mtrxProjection = new float[16];
     private final float[] mtrxView = new float[16];
     private final float[] mtrxProjectionAndView = new float[16];
+    private final float colorIntensityArray[] = {
+            0.345098f, 0.172549f, 0.513725f,
+            0.380915f, 0.161046f, 0.519216f,
+            0.416732f, 0.149542f, 0.524706f,
+            0.452549f, 0.138039f, 0.530196f,
+            0.488366f, 0.126536f, 0.535686f,
+            0.524183f, 0.115033f, 0.541176f,
+            0.560000f, 0.103529f, 0.546667f,
+            0.595817f, 0.092026f, 0.552157f,
+            0.631634f, 0.080523f, 0.557647f,
+            0.667451f, 0.069020f, 0.563137f,
+            0.703268f, 0.057516f, 0.568627f,
+            0.739085f, 0.046013f, 0.574118f,
+            0.774902f, 0.034510f, 0.579608f,
+            0.810719f, 0.023007f, 0.585098f,
+            0.846536f, 0.011503f, 0.590588f,
+            0.882353f, 0.000000f, 0.596078f};
     ConcurrentLinkedQueue<Mesh> mMeshes;
     ConcurrentLinkedQueue<MousePoint> mMousePoints;
+    ArrayList<IOpenGLObject> openGLObjects;
     float[] mousePoints;
     Bitmap mTexture;
     Smoother mSmoother = new Smoother();
@@ -35,6 +54,11 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
     CustomGLSurface mSurface;
     private SwipeMesh swipeMesh1;
     private SwipeMesh swipeMesh2;
+    private BackgroundMesh backgroundMesh;
+    private Vector prevPointer1Point;
+    private Vector prevPointer2Point;
+    private float screenhypotenuse;
+    private boolean surfaceLoaded;
 
     public CustomGLRender(Context c, CustomGLSurface surface) {
         mContext = c;
@@ -78,34 +102,25 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
     private void Render(float[] m) {
         // clear Screen and Depth Buffer, we have set the clear color as black.
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
-//        GLES20.glUniform4f(colorHandle, 1, 0, 0, 1);
-        int mtrxhandle = GLES20.glGetUniformLocation(CustomShader.sp_Image, "uMVPMatrix");
-        GLES20.glUniformMatrix4fv(mtrxhandle, 1, false, m, 0);
 
-        swipeMesh1.draw(m);
-        swipeMesh2.draw(m);
-
-
-/*
-        if (mMeshes != null && !mMeshes.isEmpty()) {
-            for (Mesh mesh : mMeshes) {
-                if (mesh.getTop() - mesh.getBottom() < 30 || mesh.getRight() - mesh.getLeft() < 30) {
-                    mMeshes.poll();
-                    continue;
-                }
-                mesh.draw(m);
-            }
+        for (IOpenGLObject openGLObject : openGLObjects) {
+            openGLObject.draw(m);
         }
-        */
     }
 
     @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
         // We need to know the current width and height.
+        Log.d("<^>","Surface Changed start");
+
+        surfaceLoaded = false;
         mScreenWidth = width;
         mScreenHeight = height;
+        screenhypotenuse = (float) Math.hypot(mScreenWidth, mScreenHeight);
         swipeMesh1.setScreenHeight(height);
         swipeMesh2.setScreenHeight(height);
+        backgroundMesh.setScreenHeight(mScreenHeight);
+        backgroundMesh.setScreenWidth(mScreenWidth);
         // Redo the Viewport, making it fullscreen.
         GLES20.glViewport(0, 0, (int) mScreenWidth, (int) mScreenHeight);
         // Clear our matrices
@@ -121,91 +136,105 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
         // Calculate the projection and view transformation
         Matrix.multiplyMM(mtrxProjectionAndView, 0, mtrxProjection, 0, mtrxView, 0);
         mousePoints = new float[4];
+        surfaceLoaded = true;
+        Log.d("<^>","Surface Changed end");
+
     }
-//    public void TranslateSprite()
-//    {
-//        vertices = new float[]
-//                {image.left, image.top, 0.0f,
-//                        image.left, image.bottom, 0.0f,
-//                        image.right, image.bottom, 0.0f,
-//                        image.right, image.top, 0.0f,
-//                };
-//        // The vertex buffer.
-//        ByteBuffer bb = ByteBuffer.allocateDirect(vertices.length * 4);
-//        bb.order(ByteOrder.nativeOrder());
-//        vertexBuffer = bb.asFloatBuffer();
-//        vertexBuffer.put(vertices);
-//        vertexBuffer.position(0);
-//    }
 
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-        int id = mContext.getResources().getIdentifier("drawable/particle_solid", null,
+        Log.d("<^>","Surface Create started");
+        surfaceLoaded = false;
+        int id = mContext.getResources().getIdentifier("drawable/touch_gradient", null,
                                                        mContext.getPackageName());
         // Temporary create a bitmap
-        mTexture = BitmapFactory.decodeResource(mContext.getResources(), id);
+        if(mTexture == null) {
+            mTexture = BitmapFactory.decodeResource(mContext.getResources(), id);
+        }
 //        initTextures();
         mMeshes = new ConcurrentLinkedQueue<>();
+        backgroundMesh = new BackgroundMesh(mScreenHeight, mScreenWidth, mTexture);
         swipeMesh1 = new SwipeMesh(mScreenHeight,mSurface);
         swipeMesh2 = new SwipeMesh(mScreenHeight,mSurface);
         mMousePoints = new ConcurrentLinkedQueue<>();
-//        mMesh = new Mesh(mContext,bmp);
-        // Set the clear color to black
-        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1);
-        GLES20.glEnable(GLES20.GL_BLEND);
-        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-//        GLES20.glEnable(GLES20.GL_TEXTURE_2D);
-//        GLES20.glEnable(GLES20.GL_ALPHA_TEST);
-//        GLES20.glge
-        // Create the shaders
+        GLES20.glClearColor(1f, 1f, 1f, 1);
+
+
+        CustomShader.sp_mouse_swipe = GLES20.glCreateProgram();
+        int mouseMeshVertexShader = CustomShader.loadShader(GLES20.GL_VERTEX_SHADER,
+                                                   CustomShader.vs_mouseSwipe);
+        int mouseMeshFragmentShader = CustomShader.loadShader(GLES20.GL_FRAGMENT_SHADER,
+                                                     CustomShader.fs_mouseSwipe);
+        GLES20.glAttachShader(CustomShader.sp_mouse_swipe, mouseMeshVertexShader);
+        GLES20.glAttachShader(CustomShader.sp_mouse_swipe, mouseMeshFragmentShader);
+        GLES20.glLinkProgram(CustomShader.sp_mouse_swipe);
+
+        CustomShader.sp_background = GLES20.glCreateProgram();
+        int backgroundVertexShader = CustomShader.loadShader(GLES20.GL_VERTEX_SHADER,
+                                                            CustomShader.vs_Texture);
+        int backgroundFragmentShader = CustomShader.loadShader(GLES20.GL_FRAGMENT_SHADER,
+                                                              CustomShader.fs_Texture);
+        GLES20.glAttachShader(CustomShader.sp_background, backgroundVertexShader);
+        GLES20.glAttachShader(CustomShader.sp_background, backgroundFragmentShader);
+        GLES20.glLinkProgram(CustomShader.sp_background);
+
+
+
         // Set our shader programm
-//        GLES20.glUseProgram(CustomShader.sp_SolidColor);
-        // Create the shaders, images
-        int vertexShader = CustomShader.loadShader(GLES20.GL_VERTEX_SHADER,
-                                                   CustomShader.vs_Image);
-        int fragmentShader = CustomShader.loadShader(GLES20.GL_FRAGMENT_SHADER,
-                                                     CustomShader.fs_Image);
-        CustomShader.sp_Image = GLES20.glCreateProgram();
-        GLES20.glAttachShader(CustomShader.sp_Image, vertexShader);
-        GLES20.glAttachShader(CustomShader.sp_Image, fragmentShader);
-        GLES20.glLinkProgram(CustomShader.sp_Image);
-        // Set our shader programm
-        GLES20.glUseProgram(CustomShader.sp_Image);
+        openGLObjects = new ArrayList<>();
+        openGLObjects.add(backgroundMesh);
+        openGLObjects.add(swipeMesh1);
+        openGLObjects.add(swipeMesh2);
+        surfaceLoaded = true;
+        Log.d("<^>","Surface Created ended");
+
     }
 
-    private void initTextures() {
-//        textureIDs = new int[1];
-//        GLES20.glGenTextures(1, textureIDs, 0);
-//        // Retrieve our image from resources.
-//        // Bind texture to texturename
-//        GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-//        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureIDs[0]);
-//        // Set filtering
-//        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER,
-//                               GLES20.GL_LINEAR);
-//        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER,
-//                               GLES20.GL_LINEAR);
-//        // Set wrapping mode
-//        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S,
-//                               GLES20.GL_CLAMP_TO_EDGE);
-//        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T,
-//                               GLES20.GL_CLAMP_TO_EDGE);
-//        // Load the bitmap into the bound texture.
-//        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, mTexture, 0);
-    }
 
     public void processTouchEvent(MotionEvent event) {
+        if (!surfaceLoaded) return;
         int pointerIndex;
         if(event.getPointerCount() <= 2) {
             if (event.findPointerIndex(0) != -1) {
                 pointerIndex = event.findPointerIndex(0);
-                swipeMesh1.addPoint(new Vector(event.getX(pointerIndex), event.getY(pointerIndex)), 1, 0, 0, 1);
+                Vector point = new Vector(event.getX(pointerIndex), event.getY(pointerIndex));
+                if (prevPointer1Point == null) {
+                    swipeMesh1.addPoint(point, new ColorV4(1, 0, 0, 1));
+                } else {
+                    swipeMesh1.addPoint(point,
+                                        getDistanceColor(prevPointer1Point, point));
+                }
+                prevPointer1Point = point;
+
             }
             if (event.findPointerIndex(1) != -1) {
                 pointerIndex = event.findPointerIndex(1);
-                swipeMesh2.addPoint(new Vector(event.getX(pointerIndex), event.getY(pointerIndex)), 1, 0, 0, 1);
+                Vector point = new Vector(event.getX(pointerIndex), event.getY(pointerIndex));
+                if (prevPointer2Point == null) {
+                    swipeMesh2.addPoint(point, new ColorV4(1, 0, 0, 1));
+                } else {
+                    swipeMesh2.addPoint(point,
+                                        getDistanceColor(prevPointer2Point, point));
+                }
+                prevPointer2Point = point;
             }
         }
+    }
+
+    public ColorV4 getDistanceColor(Vector p1, Vector p2) {
+        double width = Math.abs(p1.x - p2.x);
+        double height = Math.abs(p1.y - p2.y);
+        double distance = Math.hypot(width, height);
+        double relativeDistance = screenhypotenuse / 10;
+        int index;
+        if (distance > relativeDistance) {
+            index = colorIntensityArray.length - 3;
+        } else {
+            index = (int) Math.floor(
+                    (distance * (colorIntensityArray.length / 3)) / relativeDistance
+                                    ) * 3;
+        }
+        return new ColorV4(colorIntensityArray[index], colorIntensityArray[index + 1], colorIntensityArray[index + 2], 1f);
     }
 
     private Vector findPerp(Vector A, Vector B) {
@@ -213,7 +242,6 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
         Vector nDir = Vector.normalize(dir);
         return new Vector(-1 * nDir.y, nDir.x);
     }
-
 
     /*
    Tension: 1 is high, 0 normal, -1 is low

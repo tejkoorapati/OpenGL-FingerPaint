@@ -10,9 +10,10 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentLinkedQueue;
 /**
+ * My name is Tej and I am a poo poo.
  * Created by tej on 8/4/16.
  */
-public class SwipeMesh {
+public class SwipeMesh implements IOpenGLObject {
     private final int ageOfDeath = 60;
     Smoother mSmoother = new Smoother();
     CustomGLSurface glSurface;
@@ -47,7 +48,7 @@ public class SwipeMesh {
                 }
                 pointCalc();
             }
-        }, 0, 1000L / 60L);
+        }, 0, 1000L / 120L);
     }
 
     private void pointCalc(){
@@ -72,11 +73,11 @@ public class SwipeMesh {
                             B = nextMeshPoint.point;
                             Vector perp = findPerp(A, B);
                             C = new MeshPoint(
-                                    convertToGLCoords(Vector.add(B, Vector.scale(perp, 20 * ((float) i / out.size())))),
+                                    convertToGLCoords(Vector.add(B, Vector.scale(perp, 40 * ((float) i / out.size())))),
                                     nextMeshPoint.color,
                                     nextMeshPoint.age);
                             D = new MeshPoint(
-                                    convertToGLCoords(Vector.sub(B, Vector.scale(perp, 20 * ((float) i / out.size())))),
+                                    convertToGLCoords(Vector.sub(B, Vector.scale(perp, 40 * ((float) i / out.size())))),
                                     nextMeshPoint.color,
                                     nextMeshPoint.age);
                             mSegments.add(C);
@@ -105,24 +106,30 @@ public class SwipeMesh {
         this.screenHeight = screenHeight;
     }
 
-    public void addPoint(Vector point, float r, float g, float b, float a) {
+    public void addPoint(Vector point, ColorV4 color) {
         if(!meshPointQueue.isEmpty()){
             for(MeshPoint meshPoint : meshPointQueue){
                 meshPoint.age++;
             }
         }
-        meshPointQueue.add(new MeshPoint(point, new ColorV4(r, g, b, a), 1));
+        meshPointQueue.add(new MeshPoint(point, color, 1));
+
     }
 
     public void draw(float m[]) {
+//        Log.d("gl_swipe", "before");
+        GLES20.glUseProgram(CustomShader.sp_mouse_swipe);
+        int mtrxhandle = GLES20.glGetUniformLocation(CustomShader.sp_mouse_swipe, "uMVPMatrix");
+        GLES20.glUniformMatrix4fv(mtrxhandle, 1, false, m, 0);
+        GLES20.glUseProgram(CustomShader.sp_mouse_swipe);
+//        Log.d("gl_swipe","after");
         setupBuffers(mSegments);
-        for(int i = 0 ; i < mSegments.size(); i ++){
-//            Log.d("<^>","MeshPoint" + i + " Age: " + mSegments.get(i).age);
-        }
-        int mPositionHandle = GLES20.glGetAttribLocation(CustomShader.sp_Image, "vPosition");
+        GLES20.glEnable(GLES20.GL_BLEND);
+        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+        int mPositionHandle = GLES20.glGetAttribLocation(CustomShader.sp_mouse_swipe, "vPosition");
         GLES20.glEnableVertexAttribArray(mPositionHandle);
         GLES20.glVertexAttribPointer(mPositionHandle, 2, GLES20.GL_FLOAT, false, 0, swipeBuffer);
-        int colorHandle = GLES20.glGetAttribLocation(CustomShader.sp_Image, "a_color");
+        int colorHandle = GLES20.glGetAttribLocation(CustomShader.sp_mouse_swipe, "a_color");
         GLES20.glEnableVertexAttribArray(colorHandle);
         GLES20.glVertexAttribPointer(colorHandle, 4, GLES20.GL_FLOAT, false, 0, colorBuffer);
         GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, indices.length, GLES20.GL_UNSIGNED_INT, indexBuffer);
