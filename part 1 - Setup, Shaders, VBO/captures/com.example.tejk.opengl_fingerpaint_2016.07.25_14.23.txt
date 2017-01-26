@@ -1,0 +1,49 @@
+Applications Memory Usage (kB):
+Uptime: 2444299 Realtime: 2444286
+
+** MEMINFO in pid 29713 [com.example.tejk.opengl_fingerpaint] **
+                   Pss  Private  Private  Swapped     Heap     Heap     Heap
+                 Total    Dirty    Clean    Dirty     Size    Alloc     Free
+                ------   ------   ------   ------   ------   ------   ------
+  Native Heap     2973     2840        0        0     8192     5702     2489
+  Dalvik Heap     2642     1916        0        0    26226    21818     4408
+ Dalvik Other      408      256        0        0                           
+        Stack      160      160        0        0                           
+       Ashmem        2        0        0        0                           
+      Gfx dev      848      848        0        0                           
+    Other dev        5        0        4        0                           
+     .so mmap     1200      120      180        0                           
+    .apk mmap      436        0      136        0                           
+    .dex mmap     1580       76     1504        0                           
+    .oat mmap     1409        0      324        0                           
+    .art mmap      943      436        8        0                           
+   Other mmap       10        8        0        0                           
+   EGL mtrack    50136    50136        0        0                           
+      Unknown      158      156        0        0                           
+        TOTAL    62910    56952     2156        0    34418    27520     6897
+ 
+ App Summary
+                       Pss(KB)
+                        ------
+           Java Heap:     2360
+         Native Heap:     2840
+                Code:     2340
+               Stack:      160
+            Graphics:    50984
+       Private Other:      424
+              System:     3802
+ 
+               TOTAL:    62910      TOTAL SWAP (KB):        0
+ 
+ Objects
+               Views:       10         ViewRootImpl:        1
+         AppContexts:        2           Activities:        1
+              Assets:        2        AssetManagers:        2
+       Local Binders:        9        Proxy Binders:       11
+       Parcel memory:        3         Parcel count:       15
+    Death Recipients:        0      OpenSSL Sockets:        0
+ 
+ SQL
+         MEMORY_USED:        0
+  PAGECACHE_OVERFLOW:        0          MALLOC_SIZE:        0
+ 

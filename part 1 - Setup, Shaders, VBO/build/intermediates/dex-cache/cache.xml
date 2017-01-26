@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items version="2" >
+
+    <item
+        jar="/Users/tej/Projects/OpenGL-FingerPaint/part 1/app/build/intermediates/exploded-aar/com.android.support/support-vector-drawable/23.4.0/jars/classes.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="c2c594cace5d83a3227b2b6e658ecbfd586d3ed9">
+        <dex dex="/Users/tej/Projects/OpenGL-FingerPaint/part 1/app/build/intermediates/pre-dexed/debug/com.android.support-support-vector-drawable-23.4.0_a36dc004de66d44ed9cce99d42266d1d3f8ee521.jar" />
+    </item>
+    <item
+        jar="/Users/tej/Library/Android/sdk/extras/android/m2repository/com/android/support/support-annotations/23.4.0/support-annotations-23.4.0.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="ffbe55fdb2bb456b1485831706a9eac3300bb6b8">
+        <dex dex="/Users/tej/Projects/OpenGL-FingerPaint/part 1/app/build/intermediates/pre-dexed/debug/support-annotations-23.4.0_2252014486c71d20eb36a02c2cab9ebd56b53cf0.jar" />
+    </item>
+    <item
+        jar="/Users/tej/Projects/OpenGL-FingerPaint/part 1/app/build/intermediates/exploded-aar/com.android.support/support-v4/23.4.0/jars/libs/internal_impl-23.4.0.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="ea3c07504d2c8f4b13aa17c45c1b68ed9c1c3674">
+        <dex dex="/Users/tej/Projects/OpenGL-FingerPaint/part 1/app/build/intermediates/pre-dexed/debug/internal_impl-23.4.0_71b271f58d823998557e4663345340cc9a8410bf.jar" />
+    </item>
+    <item
+        jar="/Users/tej/Projects/OpenGL-FingerPaint/part 1/app/build/intermediates/exploded-aar/com.android.support/design/23.4.0/jars/classes.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="5326d9a850d491714fef8cbfaa9ea3416f0bf0d2">
+        <dex dex="/Users/tej/Projects/OpenGL-FingerPaint/part 1/app/build/intermediates/pre-dexed/debug/com.android.support-design-23.4.0_865be96ba5259566535819f55e731d95bd37c194.jar" />
+    </item>
+    <item
+        jar="/Users/tej/Projects/OpenGL-FingerPaint/part 1/app/build/intermediates/exploded-aar/com.android.support/animated-vector-drawable/23.4.0/jars/classes.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="de4db3785756bfb0915a9f59a9b3f2fea7407be4">
+        <dex dex="/Users/tej/Projects/OpenGL-FingerPaint/part 1/app/build/intermediates/pre-dexed/debug/com.android.support-animated-vector-drawable-23.4.0_942067a77ecf9aecf7acf811ca6e59de30e0ca9d.jar" />
+    </item>
+    <item
+        jar="/Users/tej/Projects/OpenGL-FingerPaint/part 1/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/23.4.0/jars/classes.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="548f06de403a9409f00554b3ee12a9fdea0e236c">
+        <dex dex="/Users/tej/Projects/OpenGL-FingerPaint/part 1/app/build/intermediates/pre-dexed/debug/com.android.support-appcompat-v7-23.4.0_adda7d96e9f5129656ab4144021d7ebfa135ce4e.jar" />
+    </item>
+    <item
+        jar="/Users/tej/Projects/OpenGL-FingerPaint/part 1/app/build/intermediates/exploded-aar/com.android.support/recyclerview-v7/23.4.0/jars/classes.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="ec75036c3c52e451d0cde50a5aedaf5fd32354a0">
+        <dex dex="/Users/tej/Projects/OpenGL-FingerPaint/part 1/app/build/intermediates/pre-dexed/debug/com.android.support-recyclerview-v7-23.4.0_40be1253705983f1a4c41704706d34d26a3c92cf.jar" />
+    </item>
+    <item
+        jar="/Users/tej/Projects/OpenGL-FingerPaint/part 1/app/build/intermediates/exploded-aar/com.android.support/support-v4/23.4.0/jars/classes.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="67bd36ee9340ec7c254108936ad16b24bed160cc">
+        <dex dex="/Users/tej/Projects/OpenGL-FingerPaint/part 1/app/build/intermediates/pre-dexed/debug/com.android.support-support-v4-23.4.0_5dbd771c5b591ee412c42d4fce38c65c6c585b61.jar" />
+    </item>
+
+</items>
