@@ -1,7 +1,6 @@
 package com.example.tejk.opengl_fingerpaint;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
@@ -141,42 +140,6 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         Log.d("<^>", "Surface Create started");
-        surfaceLoaded = false;
-        int id = mContext.getResources().getIdentifier("drawable/touch_gradient", null,
-                                                       mContext.getPackageName());
-        // Temporary create a bitmap
-        if (mTexture == null) {
-            mTexture = BitmapFactory.decodeResource(mContext.getResources(), id);
-        }
-//        initTextures();
-        mMeshes = new ConcurrentLinkedQueue<>();
-        backgroundMesh = new BackgroundMesh(mScreenHeight, mScreenWidth, mTexture);
-        swipeMesh1 = new SwipeMesh(mScreenHeight, mSurface);
-        swipeMesh2 = new SwipeMesh(mScreenHeight, mSurface);
-        mMousePoints = new ConcurrentLinkedQueue<>();
-        GLES20.glClearColor(1f, 1f, 1f, 1);
-        CustomShader.sp_mouse_swipe = GLES20.glCreateProgram();
-        int mouseMeshVertexShader = CustomShader.loadShader(GLES20.GL_VERTEX_SHADER,
-                                                            CustomShader.vs_mouseSwipe);
-        int mouseMeshFragmentShader = CustomShader.loadShader(GLES20.GL_FRAGMENT_SHADER,
-                                                              CustomShader.fs_mouseSwipe);
-        GLES20.glAttachShader(CustomShader.sp_mouse_swipe, mouseMeshVertexShader);
-        GLES20.glAttachShader(CustomShader.sp_mouse_swipe, mouseMeshFragmentShader);
-        GLES20.glLinkProgram(CustomShader.sp_mouse_swipe);
-        CustomShader.sp_background = GLES20.glCreateProgram();
-        int backgroundVertexShader = CustomShader.loadShader(GLES20.GL_VERTEX_SHADER,
-                                                             CustomShader.vs_Texture);
-        int backgroundFragmentShader = CustomShader.loadShader(GLES20.GL_FRAGMENT_SHADER,
-                                                               CustomShader.fs_Texture);
-        GLES20.glAttachShader(CustomShader.sp_background, backgroundVertexShader);
-        GLES20.glAttachShader(CustomShader.sp_background, backgroundFragmentShader);
-        GLES20.glLinkProgram(CustomShader.sp_background);
-        // Set our shader programm
-        openGLObjects = new ArrayList<>();
-        openGLObjects.add(backgroundMesh);
-        openGLObjects.add(swipeMesh1);
-        openGLObjects.add(swipeMesh2);
-        surfaceLoaded = true;
         Log.d("<^>", "Surface Created ended");
     }
 
@@ -231,12 +194,6 @@ public class CustomGLRender implements GLSurfaceView.Renderer {
         return new Vector(-1 * nDir.y, nDir.x);
     }
 
-    /*
-   Tension: 1 is high, 0 normal, -1 is low
-   Bias: 0 is even,
-         positive is towards first segment,
-         negative towards the other
-*/
     float hermiteInterpolate(
             float pointA, float pointB,
             float pointC, float pointD,
